@@ -1,6 +1,6 @@
 ##########################################################################
 ## Program Author:  George Zhang (Original by Greg Anthony)             ##
-## Revision Date:   Dec 31, 2018                                        ##
+## Revision Date:   Jan 01, 2019                                        ##
 ## Program Name:    Christmas Adventure                                 ##
 ## Description:     This program just does a Christmas themed game.     ##
 ##########################################################################
@@ -139,10 +139,12 @@ def main(*args, **kwargs):
                         land_key[line[0]] = [line[1]]
                         for rect in line[2:]:
                             try:
-                                hitbox = p.Rect(tuple(map(
+                                x1, y1, x2, y2 = tuple(map(
                                     int, rect.split(sep = '-')
-                                )))
-                            except:
+                                ))
+                                width, height = x2 - x1 + 1, y2 - y1 + 1
+                                hitbox = p.Rect(x1, y1, width, height)
+                            except (ValueError, p.error):
                                 continue
                             bounds = p.Rect(0, 0, 64, 64)
                             if bounds.contains(hitbox):
