@@ -268,6 +268,8 @@ def main(*args, **kwargs):
                 else:
                     player_x += direction_x
                 for x, y in ((i, j) for i in land_x for j in land_y):
+                    if x < 0 or y < 0:
+                        continue
                     px1, py1, px2, py2 = \
                          PLAYER.get_rect()
                     px1 = player_x - 24
@@ -322,6 +324,8 @@ def main(*args, **kwargs):
                 else:
                     player_y += direction_y
                 for x, y in ((i, j) for i in land_x for j in land_y):
+                    if x < 0 or y < 0:
+                        continue
                     px1, py1, px2, py2 = \
                          PLAYER.get_rect()
                     px1 = player_x - 24
