@@ -1,6 +1,6 @@
 ##########################################################################
 ## Program Author:  George Zhang (Original by Greg Anthony)             ##
-## Revision Date:   Oct 22, 2018                                        ##
+## Revision Date:   Dec 31, 2018                                        ##
 ## Program Name:    Christmas Adventure                                 ##
 ## Description:     This program just does a Christmas themed game.     ##
 ##########################################################################
@@ -139,19 +139,12 @@ def main(*args, **kwargs):
                                 hitbox = p.Rect(tuple(map(
                                     int, rect.split(sep = '-')
                                 )))
-                            except Exception as e:
-                                print('rect making failed')
-                                print(rect.split(sep = '-'))
-                                print(line)
-                                print(e)
+                            except:
                                 continue
                             bounds = p.Rect(0, 0, 64, 64)
                             if bounds.contains(hitbox):
-                                print('rect in bounds')
                                 land_key[line[0]].append(hitbox)
-                                print(land_key[line[0]])
                                 continue
-                            print('rect not in bounds')
                             hitbox = hitbox.clip(bounds)
                             if hitbox.area > 0:
                                 land_key[line[0]].append(hitbox)
@@ -159,65 +152,30 @@ def main(*args, **kwargs):
                 else:
                     break
             # end while
-            while True: # get background
-                line = l.readline()
-                if line.strip() != '':
-                    background.append([])
-                    for item, tile in enumerate(line.strip()):
-                        if isinstance(land_key[tile], list):
-                            background[-1].append(land_key[tile][0])
-                            continue
-                        background[-1].append(land_key[tile])
-                    # end for
-                else:
-                    break
-            # end while
-            while True: # get collideable
-                line = l.readline()
-                if line.strip() != '':
-                    collideable.append([])
-                    for item, tile in enumerate(line.strip()):
-                        key = land_key[tile]
-                        if isinstance(key, list):
-                            key = key[0]
-                        if key in ('start', 'start-nbg'):
-                            if key[-4:] == '-nbg':
-                                player_bg = False
-                            player_x = item*64
-                            player_y = len(collideable[:-1])*-64
-                            collideable[-1].append('blank')
-                        else:
-                            collideable[-1].append(key)
-                    # end for
-                else:
-                    break
-            # end while
-            while True: # get breakable
-                line = l.readline()
-                if line.strip() != '':
-                    breakable.append([])
-                    for item, tile in enumerate(line.strip()):
-                        if isinstance(land_key[tile], list):
-                            breakable[-1].append(land_key[tile][0])
-                            continue
-                        breakable[-1].append(land_key[tile])
-                    # end for
-                else:
-                    break
-            # end while
-            while True: # get hoverable
-                line = l.readline()
-                if line.strip() != '':
-                    hoverable.append([])
-                    for item, tile in enumerate(line.strip()):
-                        if isinstance(land_key[tile], list):
-                            hoverable[-1].append(land_key[tile][0])
-                            continue
-                        hoverable[-1].append(land_key[tile])
-                    # end for
-                else:
-                    break
-            # end while
+            for land in (background, collideable, breakable, hoverable):
+                while True: # get land
+                    line = l.readline().strip()
+                    if line != '':
+                        land.append([])
+                        for item, tile in enumerate(line):
+                            key = land_key[tile]
+                            if isinstance(key, list):
+                                key = key[0]
+                            if (
+                                land is collideable
+                                and key in ('start', 'start-nbg')
+                            ):
+                                if key[-4:] == '-nbg':
+                                    player_bg = False
+                                player_x = item*64
+                                player_y = len(land[:-1])*-64
+                                key = 'blank'
+                            land[-1].append(key)
+                        # end for
+                    else:
+                        break
+                # end while
+            # end for
         # end with
         PLAYER = p.image.load('player.png').convert() # take image
         PLAYER_WIDTH = PLAYER.get_width() # get image width
@@ -245,6 +203,7 @@ def main(*args, **kwargs):
                 print(e)
                 try:
                     texture[key] = p.image.load('debug.png').convert()
+                    print('Using debug.png as backup')
                 except:
                     print('unavailiable texture')
                     sys.exit('unavailiable texture')
@@ -309,12 +268,12 @@ def main(*args, **kwargs):
                 else:
                     player_x += direction_x
                 for x, y in ((i, j) for i in land_x for j in land_y):
+                    px1, py1, px2, py2 = \
+                         PLAYER.get_rect()
+                    px1 = player_x - 24
+                    py1 = -player_y - 24
+                    p_rect = p.Rect(px1, py1, px2, py2)
                     try:
-                        px1, py1, px2, py2 = \
-                             PLAYER.get_rect()
-                        px1 = player_x - 24
-                        py1 = -player_y - 24
-                        p_rect = p.Rect(px1, py1, px2, py2)
                         if isinstance(texture[collideable[y][x]], list):
                             for rect in texture[collideable[y][x]][1:]:
                                 t_rect = rect.move(x*64 - 32, y*64 - 32)
@@ -335,28 +294,43 @@ def main(*args, **kwargs):
                                 break
                     except IndexError:
                         pass
-                    except TypeError:
-                        print(collideable)
-                        print(texture)
-                        print(x, y)
+                    try:
+                        if isinstance(texture[breakable[y][x]], list):
+                            for rect in texture[breakable[y][x]][1:]:
+                                t_rect = rect.move(x*64 - 32, y*64 - 32)
+                                if p_rect.colliderect(t_rect):
+                                    player_x -= direction_x
+                                    break
+
+                            # end for
+                        else:
+                            tx1, ty1, tx2, ty2 = \
+                                 texture[breakable[y][x]].get_rect()
+                            if tx2 == 0 and ty2 == 0:
+                                continue
+                            tx1 = x*64 - 33
+                            ty1 = y*64 - 33
+                            t_rect = p.Rect(tx1, ty1, tx2, ty2)
+                            if p_rect.colliderect(t_rect):
+                                player_x -= direction_x
+                                break
+                    except IndexError:
+                        pass
                 # end for
                 if direction_x and direction_y:
                     player_y += direction_y# * (m.sqrt(2)/2)
                 else:
                     player_y += direction_y
                 for x, y in ((i, j) for i in land_x for j in land_y):
+                    px1, py1, px2, py2 = \
+                         PLAYER.get_rect()
+                    px1 = player_x - 24
+                    py1 = -player_y - 24
+                    p_rect = p.Rect(px1, py1, px2, py2)
                     try:
-                        px1, py1, px2, py2 = \
-                             PLAYER.get_rect()
-                        px1 = player_x - 24
-                        py1 = -player_y - 24
-                        p_rect = p.Rect(px1, py1, px2, py2)
                         if isinstance(texture[collideable[y][x]], list):
                             for rect in texture[collideable[y][x]][1:]:
                                 t_rect = rect.move(x*64 - 32, y*64 - 32)
-                                if p_rect.colliderect(t_rect):
-                                    player_y -= direction_y
-                                    break
                             # end for
                         else:
                             tx1, ty1, tx2, ty2 = \
@@ -366,36 +340,37 @@ def main(*args, **kwargs):
                             tx1 = x*64 - 33
                             ty1 = y*64 - 33
                             t_rect = p.Rect(tx1, ty1, tx2, ty2)
-                            if p_rect.colliderect(t_rect):
-                                player_y -= direction_y
-                                break
+                        if p_rect.colliderect(t_rect):
+                            player_y -= direction_y
+                            break
                     except IndexError:
                         pass
-                    except TypeError:
-                        print(collideable)
-                        print(texture)
-                        print(x, y)
-                        sys.exit()
+                    try:
+                        if isinstance(texture[breakable[y][x]], list):
+                            for rect in texture[breakable[y][x]][1:]:
+                                t_rect = rect.move(x*64 - 32, y*64 - 32)
+                            # end for
+                        else:
+                            tx1, ty1, tx2, ty2 = \
+                                 texture[breakable[y][x]].get_rect()
+                            if tx2 == 0 and ty2 == 0:
+                                continue
+                            tx1 = x*64 - 33
+                            ty1 = y*64 - 33
+                            t_rect = p.Rect(tx1, ty1, tx2, ty2)
+                        if p_rect.colliderect(t_rect):
+                            player_y -= direction_y
+                            break
+                    except IndexError:
+                        pass
                 # end for
 
-            # draw background
-            for i, row in enumerate(background):
-                for j, item in enumerate(row):
-                    if item == 'blank':
-                        continue
-                    t = texture[item]
-                    if isinstance(t, list):
-                        t = t[0]
-                    draw_image(
-                        screen,
-                        t,
-                        *position(player_x, player_y, j, i),
-                    )
-                # end for
-            # end for
-
-            # draw collideable
-            for i, row in enumerate(collideable):
+            # draw tiles
+            for i, row in (
+                *enumerate(background),
+                *enumerate(collideable),
+                *enumerate(breakable),
+            ):
                 for j, item in enumerate(row):
                     if item in ('blank', 'start'):
                         continue
@@ -410,29 +385,21 @@ def main(*args, **kwargs):
                 # end for
             # end for
 
-            # draw breakable
-            for i, row in enumerate(breakable):
-                for j, item in enumerate(row):
-                    if item == 'blank':
-                        continue
-                    t = texture[item]
-                    if isinstance(t, list):
-                        t = t[0]
-                    draw_image(
-                        screen,
-                        t,
-                        *position(player_x, player_y, j, i),
-                    )
-                # end for
-            # end for
-
             # draw player
             draw_image(screen, PLAYER, SCREEN_WIDTH/2, SCREEN_HEIGHT/2)
-            draw_text(
-                screen,
-                *position(player_x, player_y, 4, 3),
-                'Hello World!',
-            )
+            try:
+                draw_text(
+                    screen,
+                    *position(player_x, player_y, player_sx, player_sy),
+                    'Happy New Year!',
+                )
+            except:
+                player_sx, player_sy = player_x//64, -player_y//64
+                draw_text(
+                    screen,
+                    *position(player_x, player_y, player_sx, player_sy),
+                    'Happy New Year!',
+                )
 
             # update screen and wait
             p.display.update()
@@ -684,5 +651,5 @@ def main():
 #End function
         
 '''
-main()
-                
+if __name__ == '__main__':
+    main()
