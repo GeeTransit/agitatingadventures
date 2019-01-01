@@ -107,6 +107,46 @@ def main(*args, **kwargs):
         )
     # end position
 
+    # class for a type of tile / object
+    class TileObject(object):
+        def __init__(self, name, image=None, hitbox=None, text=None):
+            """Create a type of tile."""
+            self.name = name
+            self.image = image
+            self.hitbox = hitbox
+            self.text = text
+        # end __init__
+    # end TileObject
+
+    # class for a world
+    class LandObject(object):
+        def __init__(self, file):
+            """Load a file into a world."""
+            self.background = []
+            self.collideable = []
+            self.breakable = []
+            self.hoverable = []
+            self.tiles = {}
+            self.land_key = {}
+            while True:
+                line = file.readline()
+                if line.strip() != '':
+                    line = line.split(sep = ' ')
+                    llen = len(line)
+                    if llen < 3:
+                        continue
+                    try:
+                        self.tiles[line[1]] = \
+                            TileObject(
+                                line[1],
+                                p.imageload(line[2] + '.png'),
+                            )
+                    except p.error as e:
+                        print(e)
+            # end while
+        # end __init__
+    # end LandObject
+
     # make pygame constants / variables
     clock = p.time.Clock() # make screen clock
 
