@@ -3,6 +3,7 @@
 2 door-nbg 1-1-6-62 57-1-6-62
 3 grass
 4 dirt
+t s-hey there!
 S start-nbg
 
 333333333
@@ -26,5 +27,7 @@ S start-nbg
 000000000
 
 
-
-
+0
+0
+0
+0000t

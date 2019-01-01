@@ -100,7 +100,7 @@ def main(*args, **kwargs):
     # end draw_text
 
     def position(player_x, player_y, x, y):
-        """Get coordinates of object relative to player."""
+        """Get coordinates of object relative to top left corner."""
         return (
             SCREEN_WIDTH/2 - player_x + x*64,
             SCREEN_HEIGHT/2 + player_y + y*64
@@ -132,6 +132,9 @@ def main(*args, **kwargs):
                         land_key[line[0]] = 'blank'
                     elif len(line) == 2:
                         land_key[line[0]] = line[1]
+                    elif line[1][:2] == 's-':
+                        land_key[line[0]] = ' '.join(line[1:])
+                        print(land_key[line[0]])
                     else:
                         land_key[line[0]] = [line[1]]
                         for rect in line[2:]:
@@ -199,7 +202,7 @@ def main(*args, **kwargs):
                 if isinstance(t, list):
                     texture[key] = [texture[key]]
                     texture[key].extend(t[1:])
-            except Exception as e:
+            except p.error as e:
                 print(e)
                 try:
                     texture[key] = p.image.load('debug.png').convert()
@@ -394,6 +397,24 @@ def main(*args, **kwargs):
                     )
                 # end for
             # end for
+
+            # draw hoverables
+            try:
+                mx, my = p.mouse.get_pos()
+                mx = player_x + mx - SCREEN_WIDTH/2
+                my = player_y - my + SCREEN_HEIGHT/2
+                x, y = round(mx/64), round(-my/64)
+                if x >= 0 and y >= 0:
+                    text = hoverable[y][x]
+                    if text != 'blank':
+                        if text[:2] == 's-':
+                            draw_text(
+                                screen,
+                                *position(player_x, player_y, x, y),
+                                text[2:],
+                            )
+            except (IndexError, TypeError):
+                pass
 
             # draw player
             draw_image(screen, PLAYER, SCREEN_WIDTH/2, SCREEN_HEIGHT/2)
