@@ -331,6 +331,9 @@ def main(*args, **kwargs):
                         if isinstance(texture[collideable[y][x]], list):
                             for rect in texture[collideable[y][x]][1:]:
                                 t_rect = rect.move(x*64 - 32, y*64 - 32)
+                                if p_rect.colliderect(t_rect):
+                                    player_y -= direction_y
+                                    break
                             # end for
                         else:
                             tx1, ty1, tx2, ty2 = \
@@ -340,9 +343,9 @@ def main(*args, **kwargs):
                             tx1 = x*64 - 33
                             ty1 = y*64 - 33
                             t_rect = p.Rect(tx1, ty1, tx2, ty2)
-                        if p_rect.colliderect(t_rect):
-                            player_y -= direction_y
-                            break
+                            if p_rect.colliderect(t_rect):
+                                player_y -= direction_y
+                                break
                     except IndexError:
                         pass
                     try:
